@@ -33,6 +33,7 @@ from detectron2.solver import build_lr_scheduler, build_optimizer
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
 from detectron2.utils.events import CommonMetricPrinter, EventStorage, JSONWriter, TensorboardXWriter,
 import detectron2.utils.comm as comm
+from datetime import datetime
 
 def do_test(cfg, model):
     results = OrderedDict()
@@ -135,6 +136,9 @@ if __name__ == "__main__":
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
     cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
+
+    curTime = datetime.now()
+    cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
 
     print(cfg.dump())               # print out all the info in the model configuration
     print("Done config")

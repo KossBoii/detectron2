@@ -30,6 +30,7 @@ import copy
 
 from detectron2.engine import DefaultTrainer
 from detectron2.data import DatasetCatalog, MetadataCatalog
+from datetime import datetime
 
 def get_roadstress_dicts(img_dir):
     # Load and read json file stores information about annotations
@@ -129,6 +130,9 @@ if __name__ == "__main__":
 
     print(cfg.dump())               # print out all the info in the model configuration
     print("Done config")
+
+    curTime = datetime.now()
+    cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
 
     # Start training model
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
