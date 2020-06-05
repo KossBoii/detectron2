@@ -1,3 +1,6 @@
+import torch, torchvision
+print(torch.__version__, torch.cuda.is_available())
+
 # Setup detectron2 logger
 import detectron2
 from detectron2.utils.logger import setup_logger
@@ -11,7 +14,7 @@ import random
 # import some common detectron2 utilities
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
+from detectron2.config import get_cfg, CfgNode
 from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog
 
@@ -24,6 +27,8 @@ from detectron2.data import build_detection_train_loader
 from detectron2.data import transforms as T
 from detectron2.data import detection_utils as utils
 import copy
+
+from detectron2.engine import DefaultTrainer
 
 class Trainer(DefaultTrainer):
     @classmethod
@@ -59,7 +64,7 @@ def customMapper(dataset_dict):
 
 
 if __name__ == "__main__":
-    cfg = get_cfg
+    cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.DATASETS.TRAIN = ("roadstress_train",)
     cfg.DATASETS.TEST = ()
@@ -73,6 +78,7 @@ if __name__ == "__main__":
     cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
 
     print(cfg.dump())               # print out all the info in the model configuration
+    print("Done config")
 
     # Start training model
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
