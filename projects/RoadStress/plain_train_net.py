@@ -36,6 +36,51 @@ import detectron2.utils.comm as comm
 from datetime import datetime
 from detectron2.modeling import build_model
 
+def get_roadstress_dicts(img_dir):
+    # Load and read json file stores information about annotations
+    json_file = os.path.join(img_dir, "via_export_json.json")
+    with open(json_file) as f:
+        imgs_anns = json.load(f)
+
+    dataset_dicts = []          # list of annotations info for every images in the dataset
+    for idx, v in enumerate(imgs_anns.values()):
+        if(v["regions"]):
+            record = {}         # a dictionary to store all necessary info of each image in the dataset
+            
+            # open the image to get the height and width
+            filename = os.path.join(img_dir, v["filename"])
+            height, width = cv2.imread(filename).shape[:2]
+            
+            record["file_name"] = filename
+            record["image_id"] = idx
+            record["height"] = height
+            record["width"] = width
+          
+            # getting annotation for every instances of object in the image
+            annos = v["regions"]
+            objs = []
+            for anno in annos:
+                anno = anno["shape_attributes"]
+                px = anno["all_points_x"]
+                py = anno["all_points_y"]
+                poly = [(x + 0.5, y + 0.5) for x, y in zip(px, py)]
+                poly = [p for x in poly for p in x]
+
+                obj = {
+                    "bbox": [np.min(px), np.min(py), np.max(px), np.max(py)],
+                    "bbox_mode": BoxMode.XYXY_ABS,
+                    "segmentation": [poly],
+                    "category_id": 0,
+                    "iscrowd": 0
+                }
+                objs.append(obj)
+            record["annotations"] = objs
+            dataset_dicts.append(record)
+    return dataset_dicts
+
+
+
+
 def do_test(cfg, model):
     results = OrderedDict()
     for dataset_name in cfg.DATASETS.TEST:
