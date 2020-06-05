@@ -141,6 +141,12 @@ if __name__ == "__main__":
     curTime = datetime.now()
     cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
 
+    if not os.path.exists(os.getcwd() + "/output/"):
+        os.mkdir(os.getcwd() + "/output/")
+
+    os.mkdir(os.getcwd() + "/output/" + curTime.strftime("%m%d%Y%H%M%S"))        
+
+
     print(cfg.dump())               # print out all the info in the model configuration
     print("Done config")
 
