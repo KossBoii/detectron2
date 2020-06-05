@@ -109,9 +109,9 @@ def customMapper(dataset_dict):
 if __name__ == "__main__":
     # Register the dataset:
     for d in ["train", "val"]:
-    DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
-    MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
-    roadstress_metadata = MetadataCatalog.get("roadstress_train")
+    	DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
+    	MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+    	roadstress_metadata = MetadataCatalog.get("roadstress_train")
     
     # Configure detectron2's configs
     cfg = get_cfg()
