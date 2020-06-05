@@ -31,9 +31,10 @@ import copy
 # Custom Training Loop
 from detectron2.solver import build_lr_scheduler, build_optimizer
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
-from detectron2.utils.events import CommonMetricPrinter, EventStorage, JSONWriter, TensorboardXWriter,
+from detectron2.utils.events import CommonMetricPrinter, EventStorage, JSONWriter, TensorboardXWriter
 import detectron2.utils.comm as comm
 from datetime import datetime
+from detectron2.modeling import build_model
 
 def do_test(cfg, model):
     results = OrderedDict()
