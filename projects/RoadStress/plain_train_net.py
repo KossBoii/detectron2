@@ -6,6 +6,10 @@ import detectron2
 from detectron2.utils.logger import setup_logger
 setup_logger()
 
+# Logging
+import logging
+logger = logging.getLogger("detectron2")
+
 # import some common libraries
 import numpy as np
 import cv2
