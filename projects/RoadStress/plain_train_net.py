@@ -82,7 +82,21 @@ def get_roadstress_dicts(img_dir):
             dataset_dicts.append(record)
     return dataset_dicts
 
-
+def config():
+    cfg = get_cfg()
+    cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+    cfg.DATASETS.TRAIN = ("roadstress_train",)
+    cfg.DATASETS.TEST = ()
+    cfg.DATALOADER.NUM_WORKERS = 2
+    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
+    cfg.SOLVER.IMS_PER_BATCH = 1
+    cfg.SOLVER.BASE_LR = 0.005  # Learning rate
+    cfg.SOLVER.MAX_ITER = 20000 
+    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
+    cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
+    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    return cfg
 
 
 def do_test(cfg, model):
@@ -167,40 +181,66 @@ def do_train(cfg, model, resume=False):
             periodic_checkpointer.step(iteration)
 
 if __name__ == "__main__":
-    # Register the dataset:
-    for d in ["train", "val"]:
-    	DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
-    	MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
-    	roadstress_metadata = MetadataCatalog.get("roadstress_train")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Train Detectron2 to detect roadstress")
+    parser.add_argument('--dataset', required=False, metavar="/path/to/roadstress/dataset/", help='Directory of the roadstress dataset')
+    parser.add_argument("--weights", required=True, metavar="/path/to/weights.pth", help="Path to weights .pth file or 'coco'")
+    parser.add_argument("command", metavar="<command>", required=True, help="'train' or 'eval'")
     
-    # Configure detectron2's configs
-    cfg = get_cfg()
-    cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-    cfg.DATASETS.TRAIN = ("roadstress_train",)
-    cfg.DATASETS.TEST = ()
-    cfg.DATALOADER.NUM_WORKERS = 2
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
-    cfg.SOLVER.IMS_PER_BATCH = 1
-    cfg.SOLVER.BASE_LR = 0.005  # Learning rate
-    cfg.SOLVER.MAX_ITER = 20000 
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
-    cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
-    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    args = parser.parse_args()
 
-    curTime = datetime.now()
-    cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
+    # Validate arguments
+    if args.command == "train":
+        assert args.dataset, "Argument --dataset is required for training"
+    elif args.command == "eval":
+        assert args.weights, "Argument --weights is required for evaluation"
 
-    if not os.path.exists(os.getcwd() + "/output/"):
-        os.mkdir(os.getcwd() + "/output/")
+    print("Mode: ", args.command)
+    print("Weights: ", args.weights)
+    print("Dataset: ", args.dataset)
+    
+    if args.command == "train":
+        # Register the dataset:
+        for d in ["train", "val"]:
+            DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
+            MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+            roadstress_metadata = MetadataCatalog.get("roadstress_train")
+        
+        # Configure detectron2's configs
+        cfg = config()
 
-    os.mkdir(os.getcwd() + "/output/" + curTime.strftime("%m%d%Y%H%M%S"))        
+        # Load in the weights:
+        if args.weights.lower() == "coco":
+            cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+        else:
+            assert os.path.exists(args.weights), "Path to weights %s not exists" % args.weights
+            cfg.MODEL.WEIGHTS = args.weights
 
+        # Setup Logging folder
+        curTime = datetime.now()
+        cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
+        if not os.path.exists(os.getcwd() + "/output/"):
+            os.mkdir(os.getcwd() + "/output/")
+        os.mkdir(os.getcwd() + "/output/" + curTime.strftime("%m%d%Y%H%M%S"))        
 
-    print(cfg.dump())               # print out all the info in the model configuration
-    print("Done config")
+        # print out all the info in the model configuration
+        print(cfg.dump())               
 
-    model = build_model(cfg)
-    do_train(cfg, model)
+        # Train the model
+        model = build_model(cfg)
+        do_train(cfg, model)
+        print("Done Training!")
+    elif args.command == "eval":
+        cfg = config()
 
+        assert os.path.exists(args.weights), "Path to weights %s not exists" % args.weights
+        cfg.MODEL.WEIGHTS = args.weights
 
+        from detectron2.evaluation import COCOEvaluator, inference_on_dataset
+        from detectron2.data import build_detection_test_loader
+
+        evaluator = COCOEvaluator("roadstress_val", cfg, False, output_dir="./output/")
+        
+        val_loader = build_detection_test_loader(cfg, "roadstress_val")
+        inference_on_dataset(trainer.model, val_loader, evaluator)
