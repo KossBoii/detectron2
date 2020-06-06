@@ -135,7 +135,7 @@ def do_train(cfg, model, resume=False):
     with EventStorage(start_iter) as storage:
         for data, iteration in zip(data_loader, range(start_iter, max_iter)):
             iteration = iteration + 1
-            storage.step()
+            storage.step()                  # call this function at the beginning of each iteration
 
             loss_dict = model(data)
             losses = sum(loss_dict.values())
@@ -161,7 +161,7 @@ def do_train(cfg, model, resume=False):
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
 
-            if iteration - start_iter > 5 and (iteration % 20 == 0 or iteration == max_iter):
+            if iteration - start_iter > 5 and (iteration % 50 == 0 or iteration == max_iter):
                 for writer in writers:
                     writer.write()
             periodic_checkpointer.step(iteration)
@@ -182,10 +182,11 @@ if __name__ == "__main__":
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
     cfg.SOLVER.IMS_PER_BATCH = 1
     cfg.SOLVER.BASE_LR = 0.005  # Learning rate
-    cfg.SOLVER.MAX_ITER = 100   
+    cfg.SOLVER.MAX_ITER = 20000 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
     cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
+    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
 
     curTime = datetime.now()
     cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
