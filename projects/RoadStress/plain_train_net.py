@@ -40,6 +40,27 @@ import detectron2.utils.comm as comm
 from datetime import datetime
 from detectron2.modeling import build_model
 
+def customMapper(dataset_dict):
+  dataset_dict = copy.deepcopy(dataset_dict)
+  image = utils.read_image(dataset_dict["file_name"], format="BGR")
+
+  transform_list = [
+                    T.Resize((800, 1333)),
+                    T.RandomFlip(prob=0.6, horizontal=True, vertical=False),
+                    T.RandomFlip(prob=0.6, horizontal=False, vertical=True),
+                    T.RandomBrightness(0.5, 1.8),
+                    ]
+  image, transforms = T.apply_transform_gens(transform_list, image)
+  dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
+  annos = [
+		utils.transform_instance_annotations(obj, transforms, image.shape[:2])
+		for obj in dataset_dict.pop("annotations")
+		if obj.get("iscrowd", 0) == 0
+	]
+  instances = utils.annotations_to_instances(annos, image.shape[:2])
+  dataset_dict["instances"] = utils.filter_empty_instances(instances)
+  return dataset_dict
+
 def get_roadstress_dicts(img_dir):
     # Load and read json file stores information about annotations
     json_file = os.path.join(img_dir, "via_export_json.json")
@@ -144,7 +165,8 @@ def do_train(cfg, model, resume=False):
 
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
-    data_loader = build_detection_train_loader(cfg)
+    data_loader = build_detection_train_loader(cfg, mapper=customMapper)
+    # data_loader = build_detection_train_loader(cfg)
     logger.info("Starting training from iteration {}".format(start_iter))
     with EventStorage(start_iter) as storage:
         for data, iteration in zip(data_loader, range(start_iter, max_iter)):
