@@ -186,7 +186,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Detectron2 to detect roadstress")
     parser.add_argument('--dataset', required=False, metavar="/path/to/roadstress/dataset/", help='Directory of the roadstress dataset')
     parser.add_argument("--weights", required=True, metavar="/path/to/weights.pth", help="Path to weights .pth file or 'coco'")
-    parser.add_argument("command", metavar="<command>", required=True, help="'train' or 'eval'")
+    parser.add_argument("command", metavar="<command>", help="'train' or 'eval'")
     
     args = parser.parse_args()
 
