@@ -244,4 +244,4 @@ if __name__ == "__main__":
         evaluator = COCOEvaluator("roadstress_val", cfg, False, output_dir="./output/")
         
         val_loader = build_detection_test_loader(cfg, "roadstress_val")
-        inference_on_dataset(trainer.model, val_loader, evaluator)
+        inference_on_dataset(build_model(cfg), val_loader, evaluator)
