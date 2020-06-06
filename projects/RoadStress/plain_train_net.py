@@ -234,7 +234,7 @@ if __name__ == "__main__":
         print("Done Training!")
     elif args.command == "eval":
         from detectron2.data.datasets import register_coco_instances
-        register_coco_instances("roadstress_val", {}, "via_export_coco.json", "./roadstress_new/val/")
+        register_coco_instances("roadstress_val", {}, "./roadstress_new/val/via_export_coco.json", "./roadstress_new/val/")
 
         cfg = config()
 
