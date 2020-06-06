@@ -200,13 +200,15 @@ if __name__ == "__main__":
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
 
+    # Register the dataset:
+    for d in ["train", "val"]:
+        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
+        MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+        roadstress_metadata = MetadataCatalog.get("roadstress_train")
+    print("Done Registering the dataset")
+
     if args.command == "train":
-        # Register the dataset:
-        for d in ["train", "val"]:
-            DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
-            MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
-            roadstress_metadata = MetadataCatalog.get("roadstress_train")
-        print("Done Registering the dataset")
+        
 
         # Configure detectron2's configs
         cfg = config()
@@ -233,9 +235,6 @@ if __name__ == "__main__":
         do_train(cfg, model)
         print("Done Training!")
     elif args.command == "eval":
-        from detectron2.data.datasets import register_coco_instances
-        register_coco_instances("roadstress_val", {}, "./roadstress_new/val/via_export_coco.json", "./roadstress_new/val/")
-
         cfg = config()
 
         assert os.path.exists(args.weights), "Path to weights %s not exists" % args.weights
