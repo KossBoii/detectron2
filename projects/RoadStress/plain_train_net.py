@@ -116,7 +116,10 @@ def config():
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
     cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
-    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    cfg.SOLVER.CHECKPOINT_PERIOD = 2000
+    cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
+    cfg.TEST.DETECTIONS_PER_IMAGE = 256
+
     return cfg
 
 
