@@ -220,7 +220,7 @@ def setup(args):
     """
 
     for d in ["train", "val"]:
-        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress/" + d))
+        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
         MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
 
     cfg = get_cfg()
