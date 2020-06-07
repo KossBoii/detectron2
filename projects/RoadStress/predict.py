@@ -25,7 +25,7 @@ from detectron2.data import (
 )
 from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.evaluation import (
-    CityscapesEvaluator,
+    CityscapesInstanceEvaluator,
     COCOEvaluator,
     COCOPanopticEvaluator,
     DatasetEvaluators,
@@ -76,7 +76,7 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
         assert (
             torch.cuda.device_count() >= comm.get_rank()
         ), "CityscapesEvaluator currently do not work with multiple machines."
-        return CityscapesEvaluator(dataset_name)
+        return CityscapesInstanceEvaluator(dataset_name)
     if evaluator_type == "pascal_voc":
         return PascalVOCDetectionEvaluator(dataset_name)
     if evaluator_type == "lvis":
