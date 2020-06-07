@@ -3,6 +3,8 @@ output
 instant_test_output
 inference_test_output
 
+projects/RoadStress/roadstress_new/
+projects/RoadStress/*.sh
 
 *.jpg
 *.png
