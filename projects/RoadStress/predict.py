@@ -271,6 +271,13 @@ def get_roadstress_dicts(img_dir):
 #     print("Done")
 
 def visualize(args):
+    if not os.path.exists(os.getcwd() + "/../predict/"):
+        os.mkdir(os.getcwd() + "/../predict/")
+    targetFolder = args.weights[10:23]
+    if not os.path.exists(os.getcwd() + "/../predict/%s" % targetFolder):
+        os.mkdir(os.getcwd() + "/../predict/%s" % targetFolder)
+    print("Done making output folder")
+
     # Register the dataset
     for d in ["train", "val"]:
         DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts(args.dataset + "/" + d))
@@ -295,16 +302,16 @@ def visualize(args):
     cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
     cfg.TEST.DETECTIONS_PER_IMAGE = 1024
 
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = arg.threshold   # Recommend 0.7
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = float(args.threshold)   # Recommend 0.7
     predictor = DefaultPredictor(cfg)
 
     
     dataset_dicts = get_roadstress_dicts("%s/val" % args.dataset)
-    for d in random.sample(dataset_dicts, 1):    
+    for d in dataset_dicts:    
         fileName = d["file_name"][-12:-4]
         im = cv2.imread(d["file_name"])
         outputs = predictor(im)
-
+    
         v = Visualizer(im[:, :, ::-1],
                     metadata=roadstress_metadata, 
                     scale=1.0, 
@@ -312,8 +319,8 @@ def visualize(args):
         )
         v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     
-        img = v.get_image()[:, :, ::-1]
-        imsave("%s_result.jpg"%fileName, img)
+        img = v.get_image()[:, :, ::-1]	
+        imsave(os.getcwd() + "/../predict/%s/%s_result.jpg"%(targetFolder, fileName), img)
 
 if __name__ == "__main__":
     import argparse
