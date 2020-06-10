@@ -46,6 +46,8 @@ from detectron2.utils.events import (
 
 from detectron2.utils.visualizer import Visualizer
 from detectron2.engine import DefaultPredictor
+from detectron2.utils.visualizer import ColorMode
+from skimage.io import imshow, imsave
 
 logger = logging.getLogger("detectron2")
 
@@ -217,70 +219,72 @@ def get_roadstress_dicts(img_dir):
             dataset_dicts.append(record)
     return dataset_dicts
 
-def setup(args):
-    """
-    Create configs and perform basic setups.
-    """
+# def setup(args):
+#     """
+#     Create configs and perform basic setups.
+#     """
 
+#     for d in ["train", "val"]:
+#         DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
+#         MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+
+#     cfg = get_cfg()
+#     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+#     cfg.DATASETS.TRAIN = ("roadstress_train",)
+#     cfg.DATASETS.TEST = ("roadstress_val",)
+#     cfg.DATALOADER.NUM_WORKERS = 2
+#     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
+#     cfg.SOLVER.IMS_PER_BATCH = 1
+#     cfg.SOLVER.BASE_LR = 0.005  # Learning rate
+#     cfg.SOLVER.MAX_ITER = 40000 
+#     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
+#     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
+#     cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
+#     cfg.SOLVER.CHECKPOINT_PERIOD = 2000
+#     cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
+#     cfg.TEST.DETECTIONS_PER_IMAGE = 256
+
+#     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set the testing threshold for this model
+#     MetadataCatalog.get("roadstress_val").evaluator_type = "coco"
+
+#     cfg.MODEL.OUTPUT_DIR = "./output/06062020232004/model_0005999.pth"
+
+#     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+#     cfg.merge_from_list(args.opts)
+#     cfg.freeze()
+#     default_setup(
+#         cfg, args
+#     )  # if you don't like any of the default setup, write your own setup code
+#     return cfg
+
+
+# def main(args):
+#     cfg = setup(args)
+
+#     model = build_model(cfg)
+#     logger.info("Model:\n{}".format(model))
+#     DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+#         cfg.MODEL.WEIGHTS, resume=args.resume
+#     )
+#     return do_test(cfg, model)
+#     print("Done")
+
+def visualize(args):
+    # Register the dataset
     for d in ["train", "val"]:
-        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
-        MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
-
-    cfg = get_cfg()
-    cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-    cfg.DATASETS.TRAIN = ("roadstress_train",)
-    cfg.DATASETS.TEST = ("roadstress_val",)
-    cfg.DATALOADER.NUM_WORKERS = 2
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
-    cfg.SOLVER.IMS_PER_BATCH = 1
-    cfg.SOLVER.BASE_LR = 0.005  # Learning rate
-    cfg.SOLVER.MAX_ITER = 40000 
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
-    cfg.MODEL.ANCHOR_GENERATOR.ANGLES = [[-120, -90, -30 , -45, -60, 0, 30, 45, 60, 90, 120]]
-    cfg.SOLVER.CHECKPOINT_PERIOD = 2000
-    cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
-    cfg.TEST.DETECTIONS_PER_IMAGE = 256
-
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set the testing threshold for this model
-    MetadataCatalog.get("roadstress_val").evaluator_type = "coco"
-
-    cfg.MODEL.OUTPUT_DIR = "./output/06062020232004/model_0005999.pth"
-
-    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
-
-    cfg.merge_from_list(args.opts)
-    cfg.freeze()
-    default_setup(
-        cfg, args
-    )  # if you don't like any of the default setup, write your own setup code
-    return cfg
-
-
-def main(args):
-    cfg = setup(args)
-
-    model = build_model(cfg)
-    logger.info("Model:\n{}".format(model))
-    DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
-        cfg.MODEL.WEIGHTS, resume=args.resume
-    )
-    return do_test(cfg, model)
-    print("Done")
-
-def visualize():
-    for d in ["train", "val"]:
-        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
+        DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts(args.dataset + "/" + d))
         MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
     
     roadstress_metadata = MetadataCatalog.get("roadstress_train")
 
+    # Configuration
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.DATASETS.TRAIN = ("roadstress_train",)
-    cfg.DATASETS.TEST = ()
+    cfg.DATASETS.TEST = ("roadstress_val", )
     cfg.DATALOADER.NUM_WORKERS = 2
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")  # Transfer learning with weights from model_zoo
+    cfg.MODEL.WEIGHTS = args.weights
     cfg.SOLVER.IMS_PER_BATCH = 1
     cfg.SOLVER.BASE_LR = 0.005  # Learning rate
     cfg.SOLVER.MAX_ITER = 20000 
@@ -291,16 +295,14 @@ def visualize():
     cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
     cfg.TEST.DETECTIONS_PER_IMAGE = 1024
 
-    cfg.MODEL.WEIGHTS = "./output/06082020115721/model_final.pth"
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set the testing threshold for this model
-    cfg.DATASETS.TEST = ("roadstress_val", )
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = arg.threshold   # Recommend 0.7
     predictor = DefaultPredictor(cfg)
 
-    from detectron2.utils.visualizer import ColorMode
-    dataset_dicts = get_roadstress_dicts("roadstress_new/val")
+    
+    dataset_dicts = get_roadstress_dicts("%s/val" % args.dataset)
     for d in random.sample(dataset_dicts, 1):    
-        fileName = "DJI_0221"
-        im = cv2.imread("./roadstress_new/val/%s.JPG"%fileName)
+        fileName = d["file_name"][-12:-4]
+        im = cv2.imread(d["file_name"])
         outputs = predictor(im)
 
         v = Visualizer(im[:, :, ::-1],
@@ -309,20 +311,22 @@ def visualize():
                     instance_mode=ColorMode.IMAGE_BW   # remove the colors of unsegmented pixels
         )
         v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-        #cv2_imshow(v.get_image()[:, :, ::-1])
-        from skimage.io import imshow, imsave
+    
         img = v.get_image()[:, :, ::-1]
         imsave("%s_result.jpg"%fileName, img)
 
 if __name__ == "__main__":
-    visualize()
-    # args = default_argument_parser().parse_args()
-    # print("Command Line Args:", args)
-    # launch(
-    #     main,
-    #     args.num_gpus,
-    #     num_machines=args.num_machines,
-    #     machine_rank=args.machine_rank,
-    #     dist_url=args.dist_url,
-    #     args=(args,),
-    # )
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Predict roadstress using Detectron2")
+    parser.add_argument('--dataset', required=True, metavar="/path/to/roadstress/dataset/", help='Directory of the roadstress dataset')
+    parser.add_argument("--weights", required=True, metavar="/path/to/weights.pth", help="Path to weights .pth file")
+    parser.add_argument("--threshold", required=True, help="Threshold for prediction certainty")
+    
+    args = parser.parse_args()
+
+    print("dataset path: %s" % args.dataset)
+    print("dataset weights: %s" % args.weights)
+    print("dataset threshold: %s" % args.threshold)
+
+    visualize(args)
