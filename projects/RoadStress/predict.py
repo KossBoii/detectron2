@@ -44,6 +44,9 @@ from detectron2.utils.events import (
     TensorboardXWriter,
 )
 
+from detectron2.utils.visualizer import Visualizer
+from detectron2.engine import DefaultPredictor
+
 logger = logging.getLogger("detectron2")
 
 
@@ -269,6 +272,8 @@ def visualize():
     for d in ["train", "val"]:
         DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
         MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+    
+    roadstress_metadata = MetadataCatalog.get("roadstress_train")
 
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
@@ -286,15 +291,16 @@ def visualize():
     cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[8, 16, 32, 64, 128, 256, 512]]
     cfg.TEST.DETECTIONS_PER_IMAGE = 1024
 
-    cfg.MODEL.WEIGHTS = "model_final.pth"
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.   # set the testing threshold for this model
+    cfg.MODEL.WEIGHTS = "./output/06082020115721/model_final.pth"
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set the testing threshold for this model
     cfg.DATASETS.TEST = ("roadstress_val", )
     predictor = DefaultPredictor(cfg)
 
     from detectron2.utils.visualizer import ColorMode
     dataset_dicts = get_roadstress_dicts("roadstress_new/val")
     for d in random.sample(dataset_dicts, 1):    
-        im = cv2.imread(d["file_name"])
+        fileName = "DJI_0221"
+        im = cv2.imread("./roadstress_new/val/%s.JPG"%fileName)
         outputs = predictor(im)
 
         v = Visualizer(im[:, :, ::-1],
@@ -306,7 +312,7 @@ def visualize():
         #cv2_imshow(v.get_image()[:, :, ::-1])
         from skimage.io import imshow, imsave
         img = v.get_image()[:, :, ::-1]
-        imsave("result.jpg", img)
+        imsave("%s_result.jpg"%fileName, img)
 
 if __name__ == "__main__":
     visualize()
