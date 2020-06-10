@@ -271,11 +271,11 @@ def get_roadstress_dicts(img_dir):
 #     print("Done")
 
 def visualize(args):
-    if not os.path.exists(os.getcwd() + "/../predict/"):
-        os.mkdir(os.getcwd() + "/../predict/")
+    if not os.path.exists(os.getcwd() + "/predict/"):
+        os.mkdir(os.getcwd() + "/predict/")
     targetFolder = args.weights[10:23]
-    if not os.path.exists(os.getcwd() + "/../predict/%s" % targetFolder):
-        os.mkdir(os.getcwd() + "/../predict/%s" % targetFolder)
+    if not os.path.exists(os.getcwd() + "/predict/%s" % targetFolder):
+        os.mkdir(os.getcwd() + "/predict/%s" % targetFolder)
     print("Done making output folder")
 
     # Register the dataset
@@ -320,7 +320,7 @@ def visualize(args):
         v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     
         img = v.get_image()[:, :, ::-1]	
-        imsave(os.getcwd() + "/../predict/%s/%s_result.jpg"%(targetFolder, fileName), img)
+        imsave(os.getcwd() + "/predict/%s/%s_result.jpg"%(targetFolder, fileName), img)
 
 if __name__ == "__main__":
     import argparse
