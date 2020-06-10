@@ -233,8 +233,6 @@ if __name__ == "__main__":
     print("Done Registering the dataset")
 
     if args.command == "train":
-        
-
         # Configure detectron2's configs
         cfg = config()
 
