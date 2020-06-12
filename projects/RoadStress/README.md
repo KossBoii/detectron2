@@ -12,18 +12,18 @@ pip install detectron2==0.1.3 -f https://dl.fbaipublicfiles.com/detectron2/wheel
 pip install scikit-image\
 
 conda install -c anaconda svn\
-svn export https://github.com/KossBoii/RoadDamageDetection.git/trunk/roadstress_new \
+svn export https://github.com/KossBoii/RoadDamageDetection.git/trunk/roadstress_new 
 
 # Change to the main working directory
-cd detectron2/projects/RoadStress/\
+cd detectron2/projects/RoadStress/
 
 # Run the training script
 - FOR HPC: 
-sbatch running_script/model_plain_train.sh\
+sbatch running_script/model_plain_train.sh
 
 - FOR USUAL LAPTOP:
 conda activate py3\
-python3 plain_train_net.py train --weights=coco --dataset=./roadstress_new/\
+python3 plain_train_net.py train --weights=coco --dataset=./roadstress_new/
 
 # Run the evaluation script
 # First go into the output file and get the folder name: Ex:06102020121824/model_final.pth
