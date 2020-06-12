@@ -26,7 +26,7 @@ conda activate py3\
 python3 plain_train_net.py train --weights=coco --dataset=./roadstress_new/
 
 # Run the evaluation script
-# First go into the output file and get the folder name: Ex:06102020121824/model_final.pth
+<u>Note:</u> First go into the output file and get the folder name: Ex:06102020121824/model_final.pth
 - FOR HPC:\
 sbatch running_script/model_plain_eval.sh
 
