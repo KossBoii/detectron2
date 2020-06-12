@@ -18,16 +18,16 @@ svn export https://github.com/KossBoii/RoadDamageDetection.git/trunk/roadstress_
 cd detectron2/projects/RoadStress/
 
 # Run the training script
-- FOR HPC: 
+- FOR HPC:\
 sbatch running_script/model_plain_train.sh
 
-- FOR USUAL LAPTOP:
+- FOR USUAL LAPTOP:\
 conda activate py3\
 python3 plain_train_net.py train --weights=coco --dataset=./roadstress_new/
 
 # Run the evaluation script
 # First go into the output file and get the folder name: Ex:06102020121824/model_final.pth
-- FOR HPC: \
+- FOR HPC:\
 sbatch running_script/model_plain_eval.sh
 
 - FOR USUAL LAPTOP:\
