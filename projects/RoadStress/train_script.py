@@ -25,6 +25,7 @@ from detectron2.evaluation import (
     inference_on_dataset,
     print_csv_format,
 )
+from detectron2 import model_zoo
 from detectron2.modeling import build_model
 from detectron2.solver import build_lr_scheduler, build_optimizer
 from detectron2.utils.events import (
