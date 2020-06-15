@@ -34,6 +34,7 @@ from detectron2.utils.events import (
     JSONWriter,
     TensorboardXWriter,
 )
+from detectron2.data import MetadataCatalog, DatasetCatalog
 
 logger = logging.getLogger("detectron2")
 
