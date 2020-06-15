@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import datetime
 from detectron2.structures import BoxMode
 from collections import OrderedDict
 import torch
@@ -87,6 +88,28 @@ def get_roadstress_dicts(img_dir):
             record["annotations"] = objs
             dataset_dicts.append(record)
     return dataset_dicts
+
+def customMapper(dataset_dict):
+  dataset_dict = copy.deepcopy(dataset_dict)
+  image = utils.read_image(dataset_dict["file_name"], format="BGR")
+
+  transform_list = [
+                    T.Resize((800, 1333)),
+                    T.RandomFlip(prob=0.6, horizontal=True, vertical=False),
+                    T.RandomFlip(prob=0.6, horizontal=False, vertical=True),
+                    T.RandomBrightness(0.5, 1.8),
+                    ]
+  image, transforms = T.apply_transform_gens(transform_list, image)
+  dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
+  annos = [
+		utils.transform_instance_annotations(obj, transforms, image.shape[:2])
+		for obj in dataset_dict.pop("annotations")
+		if obj.get("iscrowd", 0) == 0
+	]
+  instances = utils.annotations_to_instances(annos, image.shape[:2])
+  dataset_dict["instances"] = utils.filter_empty_instances(instances)
+  return dataset_dict
+
 
 def get_evaluator(cfg, dataset_name, output_folder=None):
     """
@@ -180,7 +203,7 @@ def do_train(cfg, model, resume=False):
 
     # compared to "train_net.py", we do not support accurate timing and
     # precise BN here, because they are not trivial to implement
-    data_loader = build_detection_train_loader(cfg)
+    data_loader = build_detection_train_loader(cfg, mapper=customMapper)
     logger.info("Starting training from iteration {}".format(start_iter))
     with EventStorage(start_iter) as storage:
         for data, iteration in zip(data_loader, range(start_iter, max_iter)):
@@ -227,11 +250,18 @@ def config(args):
     cfg.SOLVER.IMS_PER_BATCH = 1
     cfg.SOLVER.BASE_LR = 0.005  # Learning rate
     cfg.SOLVER.MAX_ITER = 100 
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 1024   
+    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512   
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1  # Number of classification classes excluding the background - only has one class (roadstress)
     cfg.SOLVER.CHECKPOINT_PERIOD = 2000
     cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[2, 4, 8, 16, 32, 64, 128, 256]]
     cfg.TEST.DETECTIONS_PER_IMAGE = 1024
+
+        # Setup Logging folder
+    curTime = datetime.now()
+    cfg.OUTPUT_DIR = "./output/" + curTime.strftime("%m%d%Y%H%M%S")
+    if not os.path.exists(os.getcwd() + "/output/"):
+        os.mkdir(os.getcwd() + "/output/")
+    os.mkdir(os.getcwd() + "/output/" + curTime.strftime("%m%d%Y%H%M%S"))
 
     cfg.freeze()
     default_setup(cfg, args)
