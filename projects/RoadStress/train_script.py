@@ -207,6 +207,7 @@ def do_train(cfg, model, resume=False):
                 and iteration % cfg.TEST.EVAL_PERIOD == 0
                 and iteration != max_iter
             ):
+                print("Run inference and evaluation inside do_train")
                 do_test(cfg, model)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
@@ -253,6 +254,7 @@ def main(args):
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
+        print("Eval only: True")
         return do_test(cfg, model)
 
     distributed = comm.get_world_size() > 1
@@ -262,6 +264,7 @@ def main(args):
         )
 
     do_train(cfg, model, resume=args.resume)
+    print("Finish training the model. Run inference and evaluation!")
     return do_test(cfg, model)
 
 if __name__ == "__main__":
