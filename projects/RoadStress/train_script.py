@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+from detectron2.structures import BoxMode
 from collections import OrderedDict
 import torch
 from torch.nn.parallel import DistributedDataParallel
@@ -240,6 +241,7 @@ def main(args):
     for d in ["train", "val"]:
         DatasetCatalog.register("roadstress_" + d, lambda d=d: get_roadstress_dicts("roadstress_new/" + d))
         MetadataCatalog.get("roadstress_" + d).set(thing_classes=["roadstress"])
+        MetadataCatalog.get("roadstress_" + d).set(evaluator_type="coco")
         roadstress_metadata = MetadataCatalog.get("roadstress_train")
     print("Done Registering the dataset")
 
