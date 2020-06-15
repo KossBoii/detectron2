@@ -1,14 +1,21 @@
 import logging
 import os
+import json
 from collections import OrderedDict
 import torch
 from torch.nn.parallel import DistributedDataParallel
 
+# import some common libraries
+import numpy as np
+import cv2
+import random
+
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
-from detectron2.config import get_cfg
+from detectron2.config import get_cfg, CfgNode
 from detectron2.data import (
     MetadataCatalog,
+    DatasetCatalog,
     build_detection_test_loader,
     build_detection_train_loader,
 )
@@ -34,7 +41,7 @@ from detectron2.utils.events import (
     JSONWriter,
     TensorboardXWriter,
 )
-from detectron2.data import MetadataCatalog, DatasetCatalog
+from detectron2.engine import DefaultPredictor, DefaultTrainer
 
 logger = logging.getLogger("detectron2")
 
